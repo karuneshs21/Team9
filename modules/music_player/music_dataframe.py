@@ -9,24 +9,48 @@ class Music_Dataframe:
 
         self.Music = pd.DataFrame(columns=['path', 'artist', 'title'])
         self.tags = dict()
+        self.supported_format = [".mp3", ".wav"]
 
         if path is not None:
             self.load(path)
           
     #stores all music info from path
     def load(self, path):
-        """Takes in directory, updates DataFrame AND tags with all songs in directory (recursive).
+        """Takes in path, updates DataFrame AND tags.
+            If path is a music file, it adds that file only.
+            If path is a directory, it adds all music files within that directory (recursive)
         """
-
         all_music_data = []
-        supported_format = [".mp3", ".wav"]
 
+        #If path is actually a music file
+        if os.path.splitext(path)[1] in self.supported_format:
+            music_path = os.path.abspath(path)
+
+            current_music_data = {}
+            current_music_data['path'] = music_path
+
+            #Don't add duplicates
+            if music_path in self.tags:
+                return
+
+            tag = TinyTag.get(music_path)
+            current_music_data['title'] = tag.title
+            current_music_data['artist'] = tag.artist
+
+            self.tags[music_path] = tag
+
+            #pd.append must be stored into a new place, otherwise nothing happens
+            self.Music = self.Music.append(current_music_data, ignore_index = True)
+
+            return
+
+
+        #If given file is directory:
         for root, dirs, files in os.walk(path):
             for filename in files:
-                if os.path.splitext(filename)[1] in supported_format:
+                if os.path.splitext(filename)[1] in self.supported_format:
                     music_path = os.path.join(root, filename)
                     music_path = os.path.abspath(music_path)
-                    print(music_path)
 
                     current_music_data = {}
                     current_music_data['path'] = music_path
