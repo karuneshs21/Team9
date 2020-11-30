@@ -74,13 +74,13 @@ class FrameApp(Frame):
         # Progress Bar
         self.scale_var = DoubleVar()
         self.timeslider_last_val = ""
-        self.timeslider = Scale(self, variable=self.scale_var, command=self.scale_sel,
-                                from_=0, to=1000, orient=HORIZONTAL, length=500)
+        self.timeslider = Scale(self, variable=self.scale_var, 
+                from_=0, to=1000, orient=HORIZONTAL, length=500)
+        self.timeslider.bind("<ButtonRelease-1>", self.scale_sel) #Update only on Button Release
         self.timeslider.grid(row=10, column=0)
-        self.timeslider_last_update = time.time()
 
         self.timer = ttkTimer(self.OnTimer, 1.0)
-        self.timer.start()
+        self.timer.start() #start Thread
 
     def OnTimer(self):
         """Update the time slider according to the current movie time.
@@ -99,10 +99,7 @@ class FrameApp(Frame):
             tyme = 0
         dbl = tyme * 0.001
         self.timeslider_last_val = ("%.0f" % dbl) + ".0"
-        # don't want to programatically change slider while user is messing with it.
-        # wait 2 seconds after user lets go of slider
-        if time.time() > (self.timeslider_last_update + 2.0):
-            self.timeslider.set(dbl)
+        self.timeslider.set(dbl)
 
     def scale_sel(self, evt):
         if self.player == None:
@@ -110,7 +107,6 @@ class FrameApp(Frame):
         nval = self.scale_var.get()
         sval = str(nval)
         if self.timeslider_last_val != sval:
-            self.timeslider_last_update = time.time()
             mval = "%.0f" % (nval * 1000)
             self.player.set_time(int(mval))  # expects milliseconds
 
@@ -299,7 +295,7 @@ def _quit():
 
 if __name__ == '__main__':
     root = Tk()
-    root.geometry("350x500")
+    root.geometry("500x500")
     root.protocol("WM_DELETE_WINDOW", _quit)
     app = FrameApp(root)
     app.mainloop()
