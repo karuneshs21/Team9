@@ -8,6 +8,8 @@ import random
 import time
 from threading import Timer,Thread,Event
 
+import os
+
 class FrameApp(Frame):
     def __init__(self, parent):
         super(FrameApp, self).__init__(parent)
@@ -110,7 +112,17 @@ class FrameApp(Frame):
         # adds songs into dataframe
         self.df_songs.load(music_directory)
 
-
+    def play(self):
+        """
+        Plays current song. Does nothing if the song is currently being played.
+        """
+        self.player.play()
+    
+    def pause(self):
+        """
+        Pause current song. Does nothing if the song is already paused.
+        """
+        self.player.pause()
 
     def play_pause_music(self):
         """
@@ -172,7 +184,8 @@ class FrameApp(Frame):
         """
         Whatever function we want to test
         """
-        self.play_song("Now or Never")
+        self.print_current_song_info()
+        
 
     def play_song(self, title, artist=None):
         """
@@ -196,6 +209,27 @@ class FrameApp(Frame):
                 if not played:
                     print("Error playing the song in the player")
 
+    def get_info_current_song(self):
+        """
+        returns (title, artist, time_in_ms)
+        Note: If no metadata is found, title and artist will be returned as None
+        """
+        curr_song_path, time_in_ms = self.player.get_path_and_time()
+
+        curr_song_metadata = self.df_songs.get_metadata_tag(curr_song_path)
+        if curr_song_metadata is None:
+            return (None, None, time_in_ms)
+
+        return (curr_song_metadata.title, curr_song_metadata.artist, time_in_ms)
+
+    def print_current_song_info(self):
+        """
+        Prints information from get_info_current_song()
+        returns nothing
+        """
+
+        curr_title, curr_artist, curr_time = self.get_info_current_song()
+        print("Title: %s Artist: %s Time: %.2fsec" %(curr_title, curr_artist, curr_time/1000))
 
         
 

@@ -62,6 +62,9 @@ class VLC_Audio_Player:
         return self.listPlayer.get_media_player().get_time()
 
     def set_time(self, ms):
+        """
+        sets time the current media to specified time
+        """
         self.listPlayer.get_media_player().set_time(ms)
 
     def get_length(self):
@@ -88,3 +91,28 @@ class VLC_Audio_Player:
         played = self.listPlayer.play_item_at_index(index)
         
         return (played == 0) #exit code 0 if played no error
+
+
+    def get_path_to_current_song(self):
+        """
+        returns path(location of file) being currently played
+        """
+        curr_media = self.listPlayer.get_media_player().get_media()
+        index_of_media = self.mediaList.index_of_item(curr_media)
+
+        return self.list_songpaths[index_of_media]
+
+    def get_path_and_time(self):
+        """
+        Same as calling get_time() and get_path_to_current_song(), but
+        more Time-Safe (media changing between these two calls)
+        returns (path, time_in_ms)
+        """
+        curr_player = self.listPlayer.get_media_player()
+        curr_time = curr_player.get_time()
+        index_of_media = self.mediaList.index_of_item(curr_player.get_media())
+
+        try:
+            return (self.list_songpaths[index_of_media], curr_time)
+        except IndexError:
+            return ("", curr_time)
