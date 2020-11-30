@@ -123,7 +123,6 @@ class FrameApp(Frame):
             self.player.play()
 
 
-
     def stop(self):
         """
         Stops current song
@@ -155,7 +154,7 @@ class FrameApp(Frame):
 
     def create_random_playlist(self) -> list:
         """
-        Creates a randomly generated playlist:
+        Creates a randomly generated playlist with ALL songs in the dataframe:
         Output - List containing paths to songs
         """
         random_ints = list(range(self.df_songs.size()))
@@ -173,8 +172,32 @@ class FrameApp(Frame):
         """
         Whatever function we want to test
         """
-        self.df_songs.print()
+        self.play_song("Now or Never")
 
+    def play_song(self, title, artist=None):
+        """
+        Looks up song given title and artist.
+        If the song is not found in local directory, nothing plays (Prints a message)
+        Otherwise, the song is played from the current playlist (if it is on the playlist)
+        If the song is not on current playlist, a random playlist is generated (with the song), and is played
+        """
+
+        song_path = self.df_songs.find_song(title=title, artist=artist)
+
+        if song_path == None:
+            print("Song Not Found!")
+            return
+        else:
+            played = self.player.play_song_from_current_playlist(song_path)
+            if not played: #song not in playlist or can't play for some reason
+                self.create_random_playlist() #random playlist of ALL songs
+                played = self.player.play_song_from_current_playlist(song_path)
+
+                if not played:
+                    print("Error playing the song in the player")
+
+
+        
 
 class ttkTimer(Thread):
     """a class serving same function as wxTimer... but there may be better ways to do this
@@ -199,8 +222,19 @@ class ttkTimer(Thread):
     def get(self):
         return self.iters
 
+
+def _quit():
+    print("Closing App...")
+    root = Tk()
+    root.quit()     # stops mainloop
+    root.destroy()  # this is necessary on Windows to prevent
+                    # Fatal Python Error: PyEval_RestoreThread: NULL tstate
+    os._exit(1)
+
 if __name__ == '__main__':
     root = Tk()
     root.geometry("350x500")
+    root.protocol("WM_DELETE_WINDOW", _quit)
+    
     app = FrameApp(root)
     app.mainloop()
