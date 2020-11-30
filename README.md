@@ -32,6 +32,12 @@ There are 2 programs for this project: Music Player and Controller.
 - PyAudio (pip install PyAudio)
 - Speech_Recognition (pip install SpeechRecognition)
 
+**Mood Detection:**
+- Python3
+- Numpy
+- OpenCV
+- Tensorflow
+
 ### Issues <a name="subparagraph1"></a>
 Current Known Issues:
 Package Manager may have difficulty locating libvlc.dll. If this is the case, please run the same version (32-bit or 64-bit) Python as on the VLC 
