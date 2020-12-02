@@ -94,3 +94,15 @@ class Music_Dataframe:
         else:
             return matching_songs.iloc[0]['path']
 
+    def get_metadata_tag(self, song_path):
+        """
+        Returns tag(metadata) of song given the song path.
+        Returns None if not found
+        """
+        try:
+            ret_tag = self.tags[song_path]
+        except KeyError:
+            return None
+
+        return ret_tag
+
