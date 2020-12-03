@@ -1,14 +1,18 @@
-from vlc_audio_player import VLC_Audio_Player
-from music_dataframe import Music_Dataframe
+#Execute from modules/ using: python -m music_player.gui_music_player 
+from music_player.vlc_audio_player import VLC_Audio_Player
+from music_player.music_dataframe import Music_Dataframe
 
 from tkinter.filedialog import *
 from tkinter import *
 
 import random
 import time
-from threading import Timer,Thread,Event
 
+from threading import Timer, Thread, Event
 import os
+
+from MQTT.transmitSong import MQTTTransmitter
+from MQTT.receiveSong import MQTTReceiver
 
 class FrameApp(Frame):
     def __init__(self, parent):
@@ -17,39 +21,49 @@ class FrameApp(Frame):
         self.grid()
         self.player = VLC_Audio_Player()
         self.df_songs = Music_Dataframe()
+        self.transmitter = MQTTTransmitter()
+        self.receiver = MQTTReceiver()
 
-        self.button_play_pause = Button(self, text="Play/Pause", command=self.play_pause_music, width=20)
+        self.button_play_pause = Button(
+            self, text="Play/Pause", command=self.play_pause_music, width=20)
         self.button_play_pause.grid(row=1, column=0)
 
-        self.button_stop = Button(self, text="Stop", command=self.stop, width=20)
+        self.button_stop = Button(
+            self, text="Stop", command=self.stop, width=20)
         self.button_stop.grid(row=2, column=0)
 
         self.button_previous = Button(self, text="Previous", command=self.previous_song,
-                         width=20)
+                                      width=20)
         self.button_previous.grid(row=3, column=0)
 
-
-        self.button_next = Button(self, text="Next", command=self.next_song, width=20)
+        self.button_next = Button(
+            self, text="Next", command=self.next_song, width=20)
         self.button_next.grid(row=4, column=0)
 
         self.button_add_songs = Button(self, text="Add Song Directory", command=self.add_to_list,
-                         width=20)
+                                       width=20)
         self.button_add_songs.grid(row=5, column=0)
 
         self.button_add_songs = Button(self, text="Random Playlist", command=self.random_playlist,
-                         width=20)
+                                       width=20)
         self.button_add_songs.grid(row=6, column=0)
 
         self.button_test = Button(self, text="Test Button", command=self.test,
-                         width=20)
+                                  width=20)
         self.button_test.grid(row=7, column=0)
 
+        self.button_test = Button(self, text="Transmit", command=self.transmit,
+                                  width=20)
+        self.button_test.grid(row=8, column=0)
+
+        self.button_test = Button(self, text="Receive", command=self.receive,
+                                  width=20)
+        self.button_test.grid(row=9, column=0)
 
         self.label1 = Label(self)
-        self.label1.grid(row=9, column=0)
+        self.label1.grid(row=11, column=0)
 
         # TODO: Make progressbar, delete songs from playlist, amplify volume
-
 
         """
         Following code was modified from sample code to create the progress bar
@@ -60,9 +74,9 @@ class FrameApp(Frame):
         # Progress Bar
         self.scale_var = DoubleVar()
         self.timeslider_last_val = ""
-        self.timeslider = Scale(self, variable=self.scale_var, command=self.scale_sel, 
-                from_=0, to=1000, orient=HORIZONTAL, length=500)
-        self.timeslider.grid(row=8, column=0)
+        self.timeslider = Scale(self, variable=self.scale_var, command=self.scale_sel,
+                                from_=0, to=1000, orient=HORIZONTAL, length=500)
+        self.timeslider.grid(row=10, column=0)
         self.timeslider_last_update = time.time()
 
         self.timer = ttkTimer(self.OnTimer, 1.0)
@@ -98,8 +112,7 @@ class FrameApp(Frame):
         if self.timeslider_last_val != sval:
             self.timeslider_last_update = time.time()
             mval = "%.0f" % (nval * 1000)
-            self.player.set_time(int(mval)) # expects milliseconds
-
+            self.player.set_time(int(mval))  # expects milliseconds
 
     def add_to_list(self):
         """
@@ -108,7 +121,7 @@ class FrameApp(Frame):
         """
         music_directory = askdirectory()
         # appends song directory on disk to playlist in memory
-        
+
         # adds songs into dataframe
         self.df_songs.load(music_directory)
 
@@ -117,7 +130,7 @@ class FrameApp(Frame):
         Plays current song. Does nothing if the song is currently being played.
         """
         self.player.play()
-    
+
     def pause(self):
         """
         Pause current song. Does nothing if the song is already paused.
@@ -134,7 +147,6 @@ class FrameApp(Frame):
         else:
             self.player.play()
 
-
     def stop(self):
         """
         Stops current song
@@ -148,7 +160,6 @@ class FrameApp(Frame):
         :return: None
         """
         self.player.next()
-
 
     def previous_song(self):
         """
@@ -179,13 +190,35 @@ class FrameApp(Frame):
 
         return random_playlist
 
-
     def test(self):
         """
         Whatever function we want to test
         """
         self.print_current_song_info()
         
+    def transmit(self):
+        """
+        Transmit song data via MQTT
+        """
+        [songname, artistname, songtime] = self.get_info_current_song()
+        self.transmitter.setSongParameters(songname, artistname, songtime)
+        client = self.transmitter.connect_mqtt()
+        client.loop_start()
+        self.transmitter.publish(client)
+        client.loop_stop()
+
+    def receive(self):
+        """
+        Receive song data from MQTT and play that song if possible
+        """
+        client = self.receiver.connect_mqtt()
+        self.receiver.subscribe(client)
+        client.loop_start()
+        time.sleep(0.5)
+	#without the above pause, the program doesn't have enough time to subscribe and pick up the song info before the comm link is ended
+        client.loop_stop()
+        [songname, artistname, songtime] = self.receiver.getSongParameters()
+        print(str(songname) + ", " + str(artistname) + ", " + str(songtime))
 
     def play_song(self, title, artist=None):
         """
@@ -202,8 +235,8 @@ class FrameApp(Frame):
             return
         else:
             played = self.player.play_song_from_current_playlist(song_path)
-            if not played: #song not in playlist or can't play for some reason
-                self.create_random_playlist() #random playlist of ALL songs
+            if not played:  # song not in playlist or can't play for some reason
+                self.create_random_playlist()  # random playlist of ALL songs
                 played = self.player.play_song_from_current_playlist(song_path)
 
                 if not played:
@@ -229,9 +262,8 @@ class FrameApp(Frame):
         """
 
         curr_title, curr_artist, curr_time = self.get_info_current_song()
-        print("Title: %s Artist: %s Time: %.2fsec" %(curr_title, curr_artist, curr_time/1000))
-
-        
+        print("Title: %s Artist: %s Time: %.2fsec" %
+              (curr_title, curr_artist, curr_time/1000))
 
 class ttkTimer(Thread):
     """a class serving same function as wxTimer... but there may be better ways to do this
@@ -262,13 +294,12 @@ def _quit():
     root = Tk()
     root.quit()     # stops mainloop
     root.destroy()  # this is necessary on Windows to prevent
-                    # Fatal Python Error: PyEval_RestoreThread: NULL tstate
+    # Fatal Python Error: PyEval_RestoreThread: NULL tstate
     os._exit(1)
 
 if __name__ == '__main__':
     root = Tk()
     root.geometry("350x500")
     root.protocol("WM_DELETE_WINDOW", _quit)
-    
     app = FrameApp(root)
     app.mainloop()
