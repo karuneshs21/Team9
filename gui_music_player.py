@@ -1,6 +1,5 @@
-#Execute from modules/ using: python -m music_player.gui_music_player 
-from music_player.vlc_audio_player import VLC_Audio_Player
-from music_player.music_dataframe import Music_Dataframe
+from modules.music_player.vlc_audio_player import VLC_Audio_Player
+from modules.music_player.music_dataframe import Music_Dataframe
 
 from tkinter.filedialog import *
 from tkinter import *
@@ -11,8 +10,8 @@ import time
 from threading import Timer, Thread, Event
 import os
 
-from MQTT.transmitSong import MQTTTransmitter
-from MQTT.receiveSong import MQTTReceiver
+from modules.MQTT.transmitSong import MQTTTransmitter
+from modules.MQTT.receiveSong import MQTTReceiver
 
 class FrameApp(Frame):
     def __init__(self, parent):
@@ -44,7 +43,7 @@ class FrameApp(Frame):
                                        width=20)
         self.button_add_songs.grid(row=5, column=0)
 
-        self.button_add_songs = Button(self, text="Random Playlist", command=self.random_playlist,
+        self.button_add_songs = Button(self, text="Random Playlist", command=self.set_playlist_as_random_playlist,
                                        width=20)
         self.button_add_songs.grid(row=6, column=0)
 
@@ -167,7 +166,7 @@ class FrameApp(Frame):
     def check_music(self):
         pass
 
-    def random_playlist(self):
+    def set_playlist_as_random_playlist(self):
         random_playlist = self.create_random_playlist()
         self.player.addPlaylist(random_playlist)
 
@@ -196,7 +195,10 @@ class FrameApp(Frame):
         """
         Transmit song data via MQTT
         """
-        [songname, artistname, songtime] = self.get_info_current_song()
+        (song_metadata, songtime) = self.get_info_current_song()
+        songname = song_metadata.title
+        artistname = song_metadata.artist
+
         self.transmitter.setSongParameters(songname, artistname, songtime)
         client = self.transmitter.connect_mqtt()
         client.loop_start()
@@ -216,9 +218,11 @@ class FrameApp(Frame):
         [songname, artistname, songtime] = self.receiver.getSongParameters()
         print(str(songname) + ", " + str(artistname) + ", " + str(songtime))
 
-    def play_song(self, title, artist=None):
+        self.play_song(songname, artist=artistname, start_time=int(songtime))
+
+    def play_song(self, title, artist=None, start_time=0):
         """
-        Looks up song given title and artist.
+        Looks up song given title and artist. 
         If the song is not found in local directory, nothing plays (Prints a message)
         Otherwise, the song is played from the current playlist (if it is on the playlist)
         If the song is not on current playlist, a random playlist is generated (with the song), and is played
@@ -230,10 +234,10 @@ class FrameApp(Frame):
             print("Song Not Found!")
             return
         else:
-            played = self.player.play_song_from_current_playlist(song_path)
+            played = self.player.play_song_from_current_playlist(song_path, start_time=start_time)
             if not played:  # song not in playlist or can't play for some reason
-                self.create_random_playlist()  # random playlist of ALL songs
-                played = self.player.play_song_from_current_playlist(song_path)
+                self.set_playlist_as_random_playlist()  # random playlist of ALL songs
+                played = self.player.play_song_from_current_playlist(song_path, start_time=start_time)
 
                 if not played:
                     print("Error playing the song in the player")
@@ -246,10 +250,8 @@ class FrameApp(Frame):
         curr_song_path, time_in_ms = self.player.get_path_and_time()
 
         curr_song_metadata = self.df_songs.get_metadata_tag(curr_song_path)
-        if curr_song_metadata is None:
-            return (None, None, time_in_ms)
 
-        return (curr_song_metadata.title, curr_song_metadata.artist, time_in_ms)
+        return (curr_song_metadata, time_in_ms)
 
     def print_current_song_info(self):
         """
@@ -257,7 +259,10 @@ class FrameApp(Frame):
         returns nothing
         """
 
-        curr_title, curr_artist, curr_time = self.get_info_current_song()
+        song_tag, curr_time = self.get_info_current_song()
+        curr_title = song_tag.title
+        curr_artist = song_tag.artist
+
         print("Title: %s Artist: %s Time: %.2fsec" %
               (curr_title, curr_artist, curr_time/1000))
 

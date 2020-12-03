@@ -78,7 +78,7 @@ class VLC_Audio_Player:
         self.mediaList = self.Player.media_list_new()
         self.list_songpaths.clear()
 
-    def play_song_from_current_playlist(self, song_path):
+    def play_song_from_current_playlist(self, song_path, start_time=0):
         """
         Takes in path to song, plays the song if it is the current playlist.
         Returns True if song is being played
@@ -89,6 +89,8 @@ class VLC_Audio_Player:
         except ValueError:
             return False
         played = self.listPlayer.play_item_at_index(index)
+        if (played == 0):
+            self.set_time(start_time)
         
         return (played == 0) #exit code 0 if played no error
 
