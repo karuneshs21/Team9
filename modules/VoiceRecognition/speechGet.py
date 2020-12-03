@@ -1,6 +1,4 @@
 import speech_recognition as sr
-
-
 class Voice_Recognition:
     def __init__(self):
         # Command tells the music player what type of a command was entered by the user via an audio input

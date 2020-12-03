@@ -7,13 +7,12 @@ from tkinter import *
 
 import random
 import time
-from threading import Timer, Thread, Event
 
+from threading import Timer, Thread, Event
 import os
 
 from MQTT.transmitSong import MQTTTransmitter
 from MQTT.receiveSong import MQTTReceiver
-
 
 class FrameApp(Frame):
     def __init__(self, parent):
@@ -196,7 +195,7 @@ class FrameApp(Frame):
         Whatever function we want to test
         """
         self.print_current_song_info()
-
+        
     def transmit(self):
         """
         Transmit song data via MQTT
@@ -266,11 +265,9 @@ class FrameApp(Frame):
         print("Title: %s Artist: %s Time: %.2fsec" %
               (curr_title, curr_artist, curr_time/1000))
 
-
 class ttkTimer(Thread):
     """a class serving same function as wxTimer... but there may be better ways to do this
     """
-
     def __init__(self, callback, tick):
         Thread.__init__(self)
         self.callback = callback
@@ -300,11 +297,9 @@ def _quit():
     # Fatal Python Error: PyEval_RestoreThread: NULL tstate
     os._exit(1)
 
-
 if __name__ == '__main__':
     root = Tk()
     root.geometry("350x500")
     root.protocol("WM_DELETE_WINDOW", _quit)
-
     app = FrameApp(root)
     app.mainloop()
