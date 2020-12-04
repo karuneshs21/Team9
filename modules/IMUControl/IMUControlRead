@@ -2,7 +2,7 @@ IMU CONTROL READ ME FILE
 
 Main file name: gesture.py
 
-command is the output
+command variable is the output
 
 Returns:
 PP => Play or Pause Song
