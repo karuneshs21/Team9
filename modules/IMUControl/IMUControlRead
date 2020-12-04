@@ -1,5 +1,7 @@
 IMU CONTROL READ ME FILE
 
+Main file name: gesture.py
+
 command is the output
 
 Returns:
