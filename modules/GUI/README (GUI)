@@ -1,0 +1,28 @@
+GUI Tutorials
+
+Tutorials:
+1. PySimpleGUI (https://realpython.com/pysimplegui-python/#integrating-opencv-with-pysimplegui)
+2. PySimpleGUI Demo Programs GitHub (https://github.com/PySimpleGUI/PySimpleGUI/tree/master/DemoPrograms)
+3. Pillow to support more image file types (https://pillow.readthedocs.io/en/stable/installation.html)
+4. PySimpleGUI Image Face Detection (https://github.com/shantnu/FaceDetect/)
+5. PySimpleGUI Webcam Face Detection (https://github.com/shantnu/Webcam-Face-Detect/blob/master/webcam.py)
+6. Mutagen (https://mutagen.readthedocs.io/en/latest/)
+7. Pygame (https://www.pygame.org/wiki/GettingStarted)
+8. GUI MP3 Player (https://github.com/srinidhi14vaddy/MP3-Player-using-Tkinter-and-Mutagen-in-Python) ----- not complete, there is an error
+
+
+Installation:
+1. Install PySimpleGUI
+	python -m pip install pysimplegui
+2. Install Pillow
+	python3 -m pip install --upgrade Pillow
+3. Install OpenCV Python
+	python -m pip install opencv-python
+4. Install OpenCV Python Headless
+	pip install opencv-python-headless
+5. Install Mutagen for Audio Player
+	python3 -m pip install mutagen
+6. Install Pygame
+	python3 -m pip install pygame
+
+
