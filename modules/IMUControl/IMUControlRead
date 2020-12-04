@@ -1,0 +1,8 @@
+IMU CONTROL READ ME FILE
+
+command is the output
+
+Returns:
+PP => Play or Pause Song
+NEXT => Next Song
+PREV => Previous Song
